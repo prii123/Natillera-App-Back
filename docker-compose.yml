@@ -1,24 +1,6 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15-alpine
-    container_name: natillera_db
-    environment:
-      POSTGRES_USER: natillera_user
-      POSTGRES_PASSWORD: natillera_password
-      POSTGRES_DB: natillera_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - natillera_network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U natillera_user -d natillera_db"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
 
   web:
     build: .

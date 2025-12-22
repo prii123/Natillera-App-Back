@@ -16,6 +16,7 @@ app.add_middleware(
         "http://127.0.0.1:3000",
         "https://natillera-app.vercel.app",  # Dominio de producción en Vercel
         "https://natillera-app.vercel.app",  # Agregar también sin www si es necesario
+        "https://natillera-app-git-main-printsvallejosgmailcoms-projects.vercel.app",  # Preview deployment
     ],
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],

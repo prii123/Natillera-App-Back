@@ -198,3 +198,22 @@ class Prestamo(Base):
     creador = relationship("User", foreign_keys=[creado_por])
     transaccion = relationship("Transaccion", back_populates="prestamo", uselist=False)
     pagos = relationship("PagoPrestamo", back_populates="prestamo")
+
+
+class Politica(Base):
+    __tablename__ = "politicas"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    natillera_id = Column(Integer, ForeignKey("natilleras.id"), nullable=False)
+    titulo = Column(String, nullable=False)
+    descripcion = Column(String, nullable=False)
+    orden = Column(Integer, default=0, nullable=False)  # Para ordenar las políticas
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relaciones
+    natillera = relationship("Natillera", back_populates="politicas")
+
+
+# Agregar relación a Natillera
+Natillera.politicas = relationship("Politica", back_populates="natillera", cascade="all, delete-orphan")

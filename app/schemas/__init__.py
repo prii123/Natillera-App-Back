@@ -280,3 +280,28 @@ class PagosPrestamoResponse(BaseModel):
     
     class Config:
         from_attributes = True
+
+
+# Politica Schemas
+class PoliticaBase(BaseModel):
+    titulo: str
+    descripcion: str
+    orden: Optional[int] = 0
+
+
+class PoliticaCreate(PoliticaBase):
+    natillera_id: int
+
+
+class PoliticaUpdate(PoliticaBase):
+    pass
+
+
+class PoliticaResponse(PoliticaBase):
+    id: int
+    natillera_id: int
+    created_at: datetime
+    updated_at: datetime
+    
+    class Config:
+        from_attributes = True

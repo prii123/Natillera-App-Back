@@ -29,6 +29,9 @@ class PrestamosAgrupadosResponse(BaseModel):
     rechazados: List[PrestamoResponse]
     pendientes: List[PrestamoResponse]
 
+
+###### Endpoints de Préstamos  -   MIEMBROS  ######
+
 @router.post("/", response_model=PrestamoResponse)
 def create_prestamo(
     prestamo: PrestamoCreate,
@@ -118,43 +121,6 @@ def get_prestamo_detalle(
     return prestamo_detalle
 
 
-@router.patch("/{prestamo_id}", response_model=PrestamoResponse)
-def update_prestamo(
-    prestamo_id: int,
-    prestamo_update: PrestamoUpdate,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Actualiza un préstamo (estado, monto pagado, notas).
-    Solo el creador de la natillera puede actualizar préstamos.
-    """
-    # Verificar que el préstamo existe
-    prestamo_obj = PrestamoService.get_prestamo_by_id_simple(db, prestamo_id)
-    if not prestamo_obj:
-        raise HTTPException(status_code=404, detail="Préstamo no encontrado")
-    natillera = PrestamoService.get_natillera_by_id(db, prestamo_obj.natillera_id)
-    if not natillera:
-        raise HTTPException(status_code=404, detail="Natillera no encontrada")
-    if not PrestamoService.user_is_natillera_creator(natillera, current_user):
-        raise HTTPException(
-            status_code=403,
-            detail="Solo el creador de la natillera puede actualizar préstamos"
-        )
-    
-    try:
-        prestamo_actualizado = PrestamoService.update_prestamo(
-            db, prestamo_id, prestamo_update, current_user.id
-        )
-        
-        if not prestamo_actualizado:
-            raise HTTPException(status_code=404, detail="Préstamo no encontrado")
-        
-        return prestamo_actualizado
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
 @router.get("/{prestamo_id}/pagos", response_model=PagosPrestamoResponse)
 def get_pagos_prestamo(
     prestamo_id: int,
@@ -202,55 +168,6 @@ def registrar_pago_prestamo(
             db, prestamo_id, pago_request.monto_pago, current_user.id
         )
         return prestamo_actualizado
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.patch("/pagos/{pago_id}/aprobar", response_model=PrestamoResponse)
-def aprobar_pago_pendiente(
-    pago_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Aprueba un pago pendiente de un préstamo (solo el creador de la natillera puede hacerlo).
-    """
-    try:
-        prestamo_actualizado = PrestamoService.aprobar_pago_pendiente(db, pago_id, current_user.id)
-        return prestamo_actualizado
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.patch("/{prestamo_id}/aprobar", response_model=PrestamoResponse)
-def aprobar_prestamo(
-    prestamo_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Aprueba un préstamo (solo el creador de la natillera puede hacerlo).
-    Crea la transacción de ingreso por intereses si no existe.
-    """
-    try:
-        prestamo_aprobado = PrestamoService.aprobar_prestamo(db, prestamo_id, current_user.id)
-        return prestamo_aprobado
-    except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@router.patch("/{prestamo_id}/rechazar", response_model=PrestamoResponse)
-def rechazar_prestamo(
-    prestamo_id: int,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Rechaza un préstamo pendiente (solo el creador de la natillera puede hacerlo).
-    """
-    try:
-        prestamo_rechazado = PrestamoService.rechazar_prestamo(db, prestamo_id, current_user.id)
-        return prestamo_rechazado
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
 
@@ -366,3 +283,91 @@ def get_pagos_aprobados_count(
         query = query.filter(Prestamo.natillera_id == natillera_id)
     count = query.count()
     return {"count": count}
+
+
+
+###### Endpoints de Préstamos  -   CREADOR  ######
+
+@router.patch("/pagos/{pago_id}/aprobar", response_model=PrestamoResponse)
+def aprobar_pago_pendiente(
+    pago_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Aprueba un pago pendiente de un préstamo (solo el creador de la natillera puede hacerlo).
+    """
+    try:
+        prestamo_actualizado = PrestamoService.aprobar_pago_pendiente(db, pago_id, current_user.id)
+        return prestamo_actualizado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch("/{prestamo_id}/aprobar", response_model=PrestamoResponse)
+def aprobar_prestamo(
+    prestamo_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Aprueba un préstamo (solo el creador de la natillera puede hacerlo).
+    Crea la transacción de ingreso por intereses si no existe.
+    """
+    try:
+        prestamo_aprobado = PrestamoService.aprobar_prestamo(db, prestamo_id, current_user.id)
+        return prestamo_aprobado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@router.patch("/{prestamo_id}/rechazar", response_model=PrestamoResponse)
+def rechazar_prestamo(
+    prestamo_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Rechaza un préstamo pendiente (solo el creador de la natillera puede hacerlo).
+    """
+    try:
+        prestamo_rechazado = PrestamoService.rechazar_prestamo(db, prestamo_id, current_user.id)
+        return prestamo_rechazado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@router.patch("/{prestamo_id}", response_model=PrestamoResponse)
+def update_prestamo(
+    prestamo_id: int,
+    prestamo_update: PrestamoUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Actualiza un préstamo (estado, monto pagado, notas).
+    Solo el creador de la natillera puede actualizar préstamos.
+    """
+    # Verificar que el préstamo existe
+    prestamo_obj = PrestamoService.get_prestamo_by_id_simple(db, prestamo_id)
+    if not prestamo_obj:
+        raise HTTPException(status_code=404, detail="Préstamo no encontrado")
+    natillera = PrestamoService.get_natillera_by_id(db, prestamo_obj.natillera_id)
+    if not natillera:
+        raise HTTPException(status_code=404, detail="Natillera no encontrada")
+    if not PrestamoService.user_is_natillera_creator(natillera, current_user):
+        raise HTTPException(
+            status_code=403,
+            detail="Solo el creador de la natillera puede actualizar préstamos"
+        )
+    
+    try:
+        prestamo_actualizado = PrestamoService.update_prestamo(
+            db, prestamo_id, prestamo_update, current_user.id
+        )
+        
+        if not prestamo_actualizado:
+            raise HTTPException(status_code=404, detail="Préstamo no encontrado")
+        
+        return prestamo_actualizado
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))

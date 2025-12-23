@@ -25,11 +25,9 @@ def get_balance(
     if not natillera:
         raise HTTPException(status_code=404, detail="Natillera no encontrada")
     
-    # Verificar que el usuario es miembro o creador
-    is_member = current_user in natillera.members
-    is_creator = natillera.creator_id == current_user.id
-    if not (is_member or is_creator):
-        raise HTTPException(status_code=403, detail="No tienes acceso a esta natillera")
+    # Verificar que el usuario es el creador de la natillera
+    # if natillera.creator_id != current_user.id:
+    #     raise HTTPException(status_code=403, detail="Solo el creador puede acceder al balance de esta natillera")
     
     # Calcular totales por tipo
     efectivo = db.query(func.sum(Transaccion.monto)).filter(
@@ -75,11 +73,9 @@ def get_transacciones(
     if not natillera:
         raise HTTPException(status_code=404, detail="Natillera no encontrada")
     
-    # Verificar que el usuario es miembro o creador
-    is_member = current_user in natillera.members
-    is_creator = natillera.creator_id == current_user.id
-    if not (is_member or is_creator):
-        raise HTTPException(status_code=403, detail="No tienes acceso a esta natillera")
+    # Verificar que el usuario es el creador de la natillera
+    if natillera.creator_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Solo el creador puede acceder a las transacciones de esta natillera")
     
     # Query base con joins para cargar relaciones
     query = db.query(Transaccion).options(

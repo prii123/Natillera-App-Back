@@ -92,6 +92,7 @@ class AporteResponse(AporteBase):
     created_at: datetime
     updated_at: datetime
     user: UserResponse
+    archivos_adjuntos_count: int = 0
     
     class Config:
         from_attributes = True

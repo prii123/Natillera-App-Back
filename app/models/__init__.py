@@ -217,3 +217,28 @@ class Politica(Base):
 
 # Agregar relación a Natillera
 Natillera.politicas = relationship("Politica", back_populates="natillera", cascade="all, delete-orphan")
+
+
+class ArchivoAdjunto(Base):
+    __tablename__ = "archivos_adjuntos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    nombre_archivo = Column(String, nullable=False)
+    ruta_archivo = Column(String, nullable=False)  # Key en MinIO
+    tipo_archivo = Column(String, nullable=False)  # MIME type
+    tamano = Column(Integer, nullable=False)  # Tamaño en bytes
+    fecha_subida = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id_aporte = Column(Integer, ForeignKey("aportes.id"), nullable=True)
+    id_pago_prestamo = Column(Integer, ForeignKey("pagos_prestamo.id"), nullable=True)
+    id_usuario = Column(Integer, ForeignKey("users.id"), nullable=False)
+    
+    # Relaciones
+    aporte = relationship("Aporte", back_populates="archivos_adjuntos")
+    pago_prestamo = relationship("PagoPrestamo", back_populates="archivos_adjuntos")
+    usuario = relationship("User", back_populates="archivos_adjuntos")
+
+
+# Agregar relaciones inversas
+Aporte.archivos_adjuntos = relationship("ArchivoAdjunto", back_populates="aporte", cascade="all, delete-orphan")
+PagoPrestamo.archivos_adjuntos = relationship("ArchivoAdjunto", back_populates="pago_prestamo", cascade="all, delete-orphan")
+User.archivos_adjuntos = relationship("ArchivoAdjunto", back_populates="usuario", cascade="all, delete-orphan")

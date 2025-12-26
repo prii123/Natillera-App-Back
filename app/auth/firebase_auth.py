@@ -39,3 +39,16 @@ def get_firebase_user_by_uid(uid: str):
     except Exception as e:
         print(f"Error obteniendo usuario de Firebase: {e}")
         return None
+
+def verify_token(token: str, db):
+    """Verifica el token JWT y retorna el usuario de la base de datos"""
+    from app.models import User
+
+    firebase_user = verify_firebase_token(token)
+
+    if firebase_user is None:
+        return None
+
+    # Buscar usuario por Firebase UID
+    user = db.query(User).filter(User.firebase_uid == firebase_user['uid']).first()
+    return user

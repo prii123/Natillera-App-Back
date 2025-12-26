@@ -18,7 +18,7 @@ Sistema de ahorro colaborativo (natilleras) con autenticación Firebase y backen
 
 ## 📦 Instalación y Configuración
 
-### 1. Configurar Firebase
+### 1. Configurar Firebase y MinIO
 
 1. Crea un proyecto en [Firebase Console](https://console.firebase.google.com)
 2. Habilita **Authentication** con método Email/Password
@@ -28,7 +28,12 @@ Sistema de ahorro colaborativo (natilleras) con autenticación Firebase y backen
    - Genera una nueva clave privada
    - Guarda el archivo JSON como `firebase-credentials.json` en la raíz del proyecto
 
-5. Copia la configuración web de Firebase:
+5. Configura **MinIO** para almacenamiento de archivos:
+   - Instala y ejecuta MinIO server (e.g., `minio server /data`)
+   - Crea un bucket llamado `natillera-files`
+   - Obtén las credenciales de acceso (access key y secret key)
+
+6. Copia la configuración web de Firebase:
    - Ve a Project Settings > General
    - En "Your apps", copia la configuración
    - Pega en `frontend/firebase-config.js`
@@ -40,6 +45,10 @@ Edita el archivo `.env`:
 ```env
 DATABASE_URL=postgresql://natillera_user:natillera_password@db:5432/natillera_db
 FIREBASE_CREDENTIALS_PATH=firebase-credentials.json
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=tu_access_key
+MINIO_SECRET_KEY=tu_secret_key
+MINIO_BUCKET_NAME=natillera-files
 SECRET_KEY=tu-secret-key-aqui
 ```
 
@@ -160,6 +169,15 @@ natillera/
 ✅ Panel de usuario con historial  
 ✅ Panel de creador con vista completa  
 ✅ Validaciones de permisos por rol  
+✅ Subida de archivos adjuntos para aportes y pagos de préstamos (almacenados en MinIO)
+
+## 📝 API Endpoints - Archivos Adjuntos
+
+- `POST /archivos_adjuntos/subir` - Subir archivo adjunto (para aporte o pago de préstamo)
+- `GET /archivos_adjuntos/aporte/{id_aporte}` - Listar archivos de un aporte
+- `GET /archivos_adjuntos/pago_prestamo/{id_pago_prestamo}` - Listar archivos de un pago de préstamo
+- `GET /archivos_adjuntos/{id}/descargar` - Obtener URL de descarga de un archivo
+- `DELETE /archivos_adjuntos/{id}` - Eliminar archivo adjunto
 
 ## 📝 Licencia
 

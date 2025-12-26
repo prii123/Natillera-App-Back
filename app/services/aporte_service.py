@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import and_
+from sqlalchemy import and_, func
 from sqlalchemy.exc import IntegrityError
-from app.models import Aporte, Natillera, User, AporteStatus, Transaccion, TipoTransaccion
+from app.models import Aporte, Natillera, User, AporteStatus, Transaccion, TipoTransaccion, ArchivoAdjunto
 from app.schemas import AporteCreate, AporteUpdate
 from typing import List, Optional
 from fastapi import HTTPException, status
@@ -58,13 +58,14 @@ class AporteService:
         if natillera_id:
             query = query.filter(Aporte.natillera_id == natillera_id)
         
-        # Debug: Mostrar la consulta SQL
-        # print(f"DEBUG SQL: {query}")
+        # Obtener aportes con conteo de archivos adjuntos
+        aportes = query.options(joinedload(Aporte.user)).all()
         
-        aportes = query.all()
-        # print(f"DEBUG: Encontrados {len(aportes)} aportes para user_id={user.id}, natillera_id={natillera_id}")
-        # for a in aportes:
-        #     print(f"  - Aporte ID={a.id}, status={a.status.value}, month={a.month}/{a.year}, amount={a.amount}")
+        # Agregar conteo de archivos adjuntos a cada aporte
+        for aporte in aportes:
+            aporte.archivos_adjuntos_count = db.query(func.count(ArchivoAdjunto.id)).filter(
+                ArchivoAdjunto.id_aporte == aporte.id
+            ).scalar() or 0
         
         return aportes
     
@@ -82,7 +83,15 @@ class AporteService:
                 detail="Solo el creador puede ver todos los aportes"
             )
         
-        return db.query(Aporte).filter(Aporte.natillera_id == natillera_id).all()
+        aportes = db.query(Aporte).filter(Aporte.natillera_id == natillera_id).options(joinedload(Aporte.user)).all()
+        
+        # Agregar conteo de archivos adjuntos a cada aporte
+        for aporte in aportes:
+            aporte.archivos_adjuntos_count = db.query(func.count(ArchivoAdjunto.id)).filter(
+                ArchivoAdjunto.id_aporte == aporte.id
+            ).scalar() or 0
+        
+        return aportes
     
     @staticmethod
     def update_aporte_status(

@@ -22,4 +22,4 @@ COPY . .
 EXPOSE 4000
 
 # Comando para ejecutar la aplicación
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4000"]
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "4000", "--proxy-headers"]

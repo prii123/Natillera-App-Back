@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, users, natilleras, aportes, invitaciones, transacciones, prestamos, politicas, archivos_adjuntos
+from app.routers import auth, users, natilleras, aportes, invitaciones, transacciones, prestamos, politicas, archivos_adjuntos, sorteos
 
 app = FastAPI(
     title="Natillera API",
@@ -30,6 +30,7 @@ app.include_router(transacciones.router)
 app.include_router(prestamos.router)
 app.include_router(politicas.router)
 app.include_router(archivos_adjuntos.router)
+app.include_router(sorteos.router)
 
 @app.get("/")
 def read_root():

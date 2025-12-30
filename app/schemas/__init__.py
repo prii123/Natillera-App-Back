@@ -25,6 +25,18 @@ class TipoTransaccionEnum(str, Enum):
     INGRESO = "ingreso"
     GASTO = "gasto"
 
+class TipoSorteoEnum(str, Enum):
+    LOTERIA = "loteria"
+    RIFA = "rifa"
+
+class EstadoSorteoEnum(str, Enum):
+    ACTIVO = "activo"
+    FINALIZADO = "finalizado"
+
+class EstadoBilleteEnum(str, Enum):
+    DISPONIBLE = "disponible"
+    TOMADO = "tomado"
+
 # User Schemas
 class UserBase(BaseModel):
     email: EmailStr
@@ -306,3 +318,72 @@ class PoliticaResponse(PoliticaBase):
     
     class Config:
         from_attributes = True
+
+
+# Sorteo Schemas
+class SorteoBase(BaseModel):
+    tipo: TipoSorteoEnum
+    titulo: str
+    descripcion: Optional[str] = None
+    fecha_sorteo: Optional[datetime] = None
+
+
+class SorteoCreate(SorteoBase):
+    natillera_id: int
+
+
+class SorteoResponse(SorteoBase):
+    id: int
+    natillera_id: int
+    estado: EstadoSorteoEnum
+    creador_id: int
+    fecha_creacion: datetime
+    numero_ganador: Optional[int] = None
+    creador: UserResponse
+    natillera: NatilleraResponse
+    
+    class Config:
+        from_attributes = True
+
+
+class SorteoFinalizadoResponse(SorteoResponse):
+    """Esquema para sorteos finalizados con información del ganador"""
+    fecha_sorteo: Optional[datetime] = None
+    ganador: Optional[UserResponse] = None
+    
+    class Config:
+        from_attributes = True
+
+
+# Billete Loteria Schemas
+class BilleteLoteriaBase(BaseModel):
+    numero: int
+    estado: EstadoBilleteEnum
+
+
+class BilleteLoteriaResponse(BilleteLoteriaBase):
+    id: int
+    sorteo_id: int
+    tomado_por: Optional[int] = None
+    fecha_tomado: Optional[datetime] = None
+    pagado: bool = False
+    
+    class Config:
+        from_attributes = True
+
+
+class BilleteLoteriaWithUser(BilleteLoteriaResponse):
+    usuario: Optional[UserResponse] = None
+    
+    class Config:
+        from_attributes = True
+
+
+class BilleteLoteriaAdmin(BilleteLoteriaWithUser):
+    """Esquema para que el creador/admin vea todos los billetes con info completa"""
+    pass
+
+
+class FinalizarSorteoRequest(BaseModel):
+    """Esquema para la petición de finalizar sorteo"""
+    numero_ganador: Optional[str] = None

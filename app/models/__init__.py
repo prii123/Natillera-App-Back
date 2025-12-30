@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, DateTime, Enum, Table, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, DateTime, Enum, Table, Boolean, UniqueConstraint
 from sqlalchemy.orm import relationship
 from datetime import datetime
 import enum
@@ -27,6 +27,7 @@ class User(Base):
     created_natilleras = relationship("Natillera", back_populates="creator")
     natilleras = relationship("Natillera", secondary=user_natillera, back_populates="members")
     aportes = relationship("Aporte", back_populates="user")
+    billetes_loteria = relationship("BilleteLoteria", back_populates="usuario", foreign_keys="BilleteLoteria.tomado_por")
 
 
 class NatilleraEstado(str, enum.Enum):
@@ -242,3 +243,78 @@ class ArchivoAdjunto(Base):
 Aporte.archivos_adjuntos = relationship("ArchivoAdjunto", back_populates="aporte", cascade="all, delete-orphan")
 PagoPrestamo.archivos_adjuntos = relationship("ArchivoAdjunto", back_populates="pago_prestamo", cascade="all, delete-orphan")
 User.archivos_adjuntos = relationship("ArchivoAdjunto", back_populates="usuario", cascade="all, delete-orphan")
+
+
+class TipoSorteo(str, enum.Enum):
+    LOTERIA = "loteria"
+    RIFA = "rifa"
+
+
+class EstadoSorteo(str, enum.Enum):
+    ACTIVO = "activo"
+    FINALIZADO = "finalizado"
+
+
+class Sorteo(Base):
+    __tablename__ = "sorteos"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    natillera_id = Column(Integer, ForeignKey("natilleras.id"), nullable=False)
+    tipo = Column(Enum(TipoSorteo, name='tiposorteo', values_callable=lambda x: [e.value for e in x]), nullable=False)
+    titulo = Column(String, nullable=False)
+    descripcion = Column(String, nullable=True)
+    fecha_creacion = Column(DateTime, default=datetime.utcnow, nullable=False)
+    fecha_sorteo = Column(DateTime, nullable=True)
+    estado = Column(Enum(EstadoSorteo, name='estadosorteo', values_callable=lambda x: [e.value for e in x]), default=EstadoSorteo.ACTIVO, nullable=False)
+    creador_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    numero_ganador = Column(String(3), nullable=True)  # Número ganador cuando se finaliza
+    
+    # Relaciones
+    natillera = relationship("Natillera", foreign_keys=[natillera_id])
+    creador = relationship("User", foreign_keys=[creador_id])
+    billetes = relationship("BilleteLoteria", back_populates="sorteo", cascade="all, delete-orphan")
+    
+    # Atributo para el ganador (se pobla dinámicamente)
+    _ganador = None
+    
+    @property
+    def ganador(self):
+        """Propiedad para obtener el usuario ganador"""
+        if self._ganador is not None:
+            return self._ganador
+        if self.numero_ganador and self.billetes:
+            for billete in self.billetes:
+                if billete.numero == self.numero_ganador:
+                    self._ganador = billete.usuario
+                    return self._ganador
+        return None
+    
+    @ganador.setter
+    def ganador(self, value):
+        self._ganador = value
+
+
+class EstadoBillete(str, enum.Enum):
+    DISPONIBLE = "disponible"
+    TOMADO = "tomado"
+
+
+class BilleteLoteria(Base):
+    __tablename__ = "billetes_loteria"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    sorteo_id = Column(Integer, ForeignKey("sorteos.id"), nullable=False)
+    numero = Column(String(3), nullable=False)  # 000-100
+    estado = Column(Enum(EstadoBillete, name='estadobillete', values_callable=lambda x: [e.value for e in x]), default=EstadoBillete.DISPONIBLE, nullable=False)
+    tomado_por = Column(Integer, ForeignKey("users.id"), nullable=True)
+    fecha_tomado = Column(DateTime, nullable=True)
+    pagado = Column(Boolean, default=False, nullable=False)  # Indica si el billete ha sido pagado
+    
+    # Relaciones
+    sorteo = relationship("Sorteo", back_populates="billetes")
+    usuario = relationship("User", foreign_keys=[tomado_por])
+    
+    # Constraint único para sorteo + numero
+    __table_args__ = (
+        UniqueConstraint('sorteo_id', 'numero', name='unique_sorteo_numero'),
+    )

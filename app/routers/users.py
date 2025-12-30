@@ -12,6 +12,22 @@ def get_current_user_info(current_user: User = Depends(get_current_user)):
     """Obtiene la información del usuario actual"""
     return current_user
 
+@router.get("/{user_id}", response_model=UserResponse)
+def get_user_by_id(
+    user_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Obtiene información de un usuario por ID"""
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Usuario no encontrado"
+        )
+    
+    return user
+
 @router.get("/search", response_model=UserResponse)
 def search_user(
     identifier: str,

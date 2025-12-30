@@ -11,7 +11,7 @@ app = FastAPI(
 # Configurar CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Permitir todos los orígenes temporalmente para debugging
+    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000", "https://natillera-app.vercel.app", "https://api.natillerapp.store"],  # Orígenes específicos
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
     allow_headers=["*"],

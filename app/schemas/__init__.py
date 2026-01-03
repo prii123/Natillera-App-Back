@@ -339,6 +339,7 @@ class SorteoResponse(SorteoBase):
     creador_id: int
     fecha_creacion: datetime
     numero_ganador: Optional[int] = None
+    fecha_sorteo: Optional[datetime] = None
     creador: UserResponse
     natillera: NatilleraResponse
     

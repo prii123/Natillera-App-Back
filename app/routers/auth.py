@@ -13,6 +13,7 @@ class SyncUserRequest(BaseModel):
     username: str
     full_name: str
 
+
 @router.post("/sync-user", response_model=UserResponse, status_code=status.HTTP_200_OK)
 def sync_firebase_user(request: SyncUserRequest, db: Session = Depends(get_db)):
     """

@@ -22,7 +22,7 @@ class SorteoService:
             tipo=sorteo.tipo,
             titulo=sorteo.titulo,
             descripcion=sorteo.descripcion,
-            fecha_sorteo=sorteo.fecha_sorteo,
+            fecha_sorteo=datetime.fromisoformat(sorteo.fecha_sorteo + "T00:00:00") if sorteo.fecha_sorteo else None,
             estado=EstadoSorteo.ACTIVO,
             creador_id=creator.id
         )

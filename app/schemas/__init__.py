@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from typing import Optional, List
-from datetime import datetime
+from datetime import datetime, date
 from decimal import Decimal
 from enum import Enum
 
@@ -325,7 +325,7 @@ class SorteoBase(BaseModel):
     tipo: TipoSorteoEnum
     titulo: str
     descripcion: Optional[str] = None
-    fecha_sorteo: Optional[datetime] = None
+    fecha_sorteo: Optional[str] = None
 
 
 class SorteoCreate(SorteoBase):
